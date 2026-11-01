@@ -1,0 +1,22 @@
+{
+    "cameras": [
+        {
+            "id": 1,
+            "name": "หน้าบ้าน (Front)",
+            "url": "rtsp://admin:password@192.168.1.101:554/stream2",
+            "enabled": true
+        },
+        {
+            "id": 2,
+            "name": "หน้าห้อง (Hallway)",
+            "url": "rtsp://admin:password@192.168.1.102:554/stream2",
+            "enabled": true
+        },
+        {
+            "id": 3,
+            "name": "โรงรถ (Garage)",
+            "url": "rtsp://admin:password@192.168.1.103:554/stream2",
+            "enabled": true
+        }
+    ]
+}

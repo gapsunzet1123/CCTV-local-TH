@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCTV Live Multi-View | ศูนย์รวมดูกล้องวงจรปิดผ่านเว็บ</title>
+  <link rel="stylesheet" href="/static/style.css?v=2.2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="layout-balanced">
+
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <span class="live-indicator"></span>
+        <span class="brand-text">CCTV LIVE VIEW</span>
+      </div>
+      <div class="header-clock" id="live-clock">--:--:--</div>
+      <div class="drag-hint">
+        <span class="drag-icon">✋</span> ลากจอสลับตำแหน่งได้
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="layout-controls">
+        <button class="layout-btn active" data-layout="balanced" title="3 จอขนาดสมดุลเท่ากัน">
+          <span class="icon">🔲</span> 3 จอเท่ากัน
+        </button>
+        <button class="layout-btn" data-layout="columns" title="เรียงแถวแนวนอน 3 คอลัมน์">
+          <span class="icon">⫼</span> 3 จอแนวนอน
+        </button>
+        <button class="layout-btn" data-layout="focus" title="1 จอหลักด้านซ้าย + 2 จอด้านขวา (ลากสลับได้)">
+          <span class="icon">◫</span> จอหลัก + 2 จอข้าง
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="btn btn-icon" id="btn-fit-toggle" title="สลับโหมดภาพ: เต็มกรอบไร้ขอบดำ / พอดีมุมกล้อง">
+        <span id="fit-icon">📐</span> <span id="fit-text">เต็มกรอบ</span>
+      </button>
+      <button class="btn btn-icon" id="btn-fullscreen" title="ขยายเต็มหน้าจอ (F11)">
+        <span>⛶</span> เต็มจอ
+      </button>
+      <button class="btn btn-primary" id="btn-open-settings">
+        <span>⚙️</span> จัดการกล้อง & เพิ่มจอ
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Multi-View Video Stage (Draggable & Dynamically Populated) -->
+  <main class="video-stage" id="video-stage">
+    <!-- Rendered dynamically by app.js with HTML5 Drag & Drop -->
+  </main>
+
+  <!-- Settings Drawer / Modal -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside class="settings-drawer" id="settings-drawer">
+    <div class="drawer-header">
+      <div>
+        <h3>⚙️ จัดการกล้อง & การตั้งค่า</h3>
+        <span class="drawer-subtitle">เพิ่ม/ลดจำนวนจอ และตั้งค่า RTSP URL</span>
+      </div>
+      <button class="btn-close" id="btn-close-settings">&times;</button>
+    </div>
+
+    <div class="drawer-content">
+      <div class="info-alert">
+        <span class="info-icon">🛡️</span>
+        <div>
+          <strong>ข้อมูลมีความปลอดภัย 100% (Local-Only):</strong>
+          <p>ระบบสตรีมตรงผ่านฮาร์ดแวร์การ์ดจอ (GPU) ในบ้าน ไม่มีการส่งข้อมูลใดๆ ออกสู่อินเทอร์เน็ตภายนอก CPU กินน้อยกว่า 1%</p>
+        </div>
+      </div>
+
+      <div class="tip-alert">
+        <span class="tip-icon">💡</span>
+        <div>
+          <strong>เคล็ดลับการจัดจอ:</strong>
+          <p>คุณสามารถ<strong>คลิกลากที่หัวแถบกล้อง (แถบชื่อ) เพื่อสลับตำแหน่งจอ</strong>ซ้าย-ขวา หรือสลับกับจอใหญ่ได้ทันทีตามใจชอบ</p>
+        </div>
+      </div>
+
+      <div class="drawer-actions-bar">
+        <h4>รายการกล้องในระบบ:</h4>
+        <button class="btn btn-sm btn-outline" id="btn-add-camera">➕ เพิ่มจอใหม่ (Add Camera)</button>
+      </div>
+
+      <div id="camera-settings-list" class="settings-list">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="presets-section">
+        <h4>📋 ตัวช่วยใส่โครงสร้าง RTSP ตามยี่ห้อ:</h4>
+        <div class="preset-badges">
+          <span class="badge" onclick="fillPresetTemplate('rtsp://[USER]:[PASS]@[IP]:554/stream1')">TP-Link Tapo (stream1 ชัดสุด)</span>
+          <span class="badge" onclick="fillPresetTemplate('rtsp://[USER]:[PASS]@[IP]:554/stream2')">TP-Link Tapo (stream2 ลื่นสุด)</span>
+          <span class="badge" onclick="fillPresetTemplate('rtsp://[USER]:[PASS]@[IP]:554/Streaming/Channels/101')">Hikvision / Ezviz</span>
+          <span class="badge" onclick="fillPresetTemplate('rtsp://[USER]:[PASS]@[IP]:554/cam/realmonitor?channel=1&subtype=0')">Dahua / IMOU</span>
+          <span class="badge" onclick="fillPresetTemplate('rtsp://[USER]:[PASS]@[IP]:554/live/ch0')">V380 / ทั่วไป</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn btn-secondary" id="btn-cancel-settings">ยกเลิก</button>
+      <button class="btn btn-save" id="btn-save-settings">💾 บันทึกและอัปเดตหน้าจอทันที</button>
+    </div>
+  </aside>
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/static/app.js?v=2.2"></script>
+</body>
+</html>
