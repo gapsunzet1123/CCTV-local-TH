@@ -9,7 +9,6 @@ const body = document.body;
 const liveClock = document.getElementById("live-clock");
 const videoStage = document.getElementById("video-stage");
 const layoutButtons = document.querySelectorAll(".layout-btn");
-const btnFullscreen = document.getElementById("btn-fullscreen");
 const btnOpenSettings = document.getElementById("btn-open-settings");
 const btnCloseSettings = document.getElementById("btn-close-settings");
 const btnCancelSettings = document.getElementById("btn-cancel-settings");
@@ -271,14 +270,7 @@ function exitFocusMode() {
   });
 }
 
-// Fullscreen Browser
-btnFullscreen.addEventListener("click", () => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  } else {
-    document.exitFullscreen().catch(() => {});
-  }
-});
+
 
 // Load Cameras from API
 async function loadCameras() {
