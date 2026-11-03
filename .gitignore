@@ -2,6 +2,12 @@
 cameras.local.json
 go2rtc.yaml
 
+# PyInstaller Build Artifacts & Binaries
+build/
+dist/
+*.spec
+*.exe
+
 # Python Bytecode and Environments
 __pycache__/
 *.py[cod]

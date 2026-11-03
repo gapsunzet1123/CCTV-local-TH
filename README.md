@@ -1,13 +1,18 @@
 # 📹 CCTV Local Web (Multi-View Monitoring)
 
-ระบบศูนย์รวมดูกล้องวงจรปิดผ่านเว็บเบราว์เซอร์ความเร็วสูง **Zero-CPU Hardware Acceleration (WebRTC)** ถอดรหัสภาพผ่านชิปการ์ดจอ (GPU) โดยตรง กิน CPU ต่ำกว่า 1% พร้อมระบบคลิกลากสลับตำแหน่งจอ (Drag & Drop) และปรับแต่งเลย์เอาต์หน้าจอได้อิสระ
+ระบบศูนย์รวมดูกล้องวงจรปิดผ่านเว็บเบราว์เซอร์ความเร็วสูง **Zero-CPU Hardware Acceleration (WebRTC)** ถอดรหัสภาพผ่านชิปการ์ดจอ (GPU) โดยตรง กิน CPU ต่ำกว่า 1% พร้อมระบบ System Tray ทำงานเบื้องหลังเงียบๆ, คลิกเดียวเปิดดูกล้อง, รองรับคลิกลากสลับตำแหน่งจอ (Drag & Drop) และปรับแต่งเลย์เอาต์หน้าจอได้อิสระ
 
-A high-performance, ultra-low latency, zero-CPU local web viewer for multiple CCTV cameras (RTSP/WebRTC) with GPU hardware acceleration and interactive drag-and-drop tile management.
+A high-performance, ultra-low latency, zero-CPU local web viewer for multiple CCTV cameras (RTSP/WebRTC) with GPU hardware acceleration, Windows System Tray background app, and interactive drag-and-drop tile management.
 
 ---
 
 ## ✨ คุณสมบัติเด่น (Features)
 
+* 🖥️ **รันเป็นโปรแกรม `.exe` พร้อม System Tray:** 
+  * รันเงียบๆ ในพื้นหลัง ไม่มีหน้าต่างดำ (Console) โผล่มากวนใจ
+  * แสดงไอคอนกล้องวงจรปิดที่มุมขวาล่างข้างนาฬิกา (System Tray Icon)
+  * ดับเบิ้ลคลิกที่ไอคอนเพื่อเปิดหน้าต่างกล้องขึ้นเบราว์เซอร์ทันที
+  * มีเมนูคลิกขวา: เปิดดูกล้อง, เชื่อมต่อสัญญาณใหม่, เปิดโฟลเดอร์เก็บข้อมูล, เริ่มทำงานพร้อมเปิด Windows (Autostart), และออกจากโปรแกรม
 * ⚡ **กิน CPU ต่ำกว่า 1% (Zero-CPU Hardware Acceleration):** สตรีมภาพผ่าน WebRTC Direct Passthrough ให้การ์ดจอ (GPU) ของเครื่องถอดรหัสโดยตรง ไม่ใช้ CPU แปลงภาพซ้ำซ้อน
 * 🔀 **คลิกลากจอสลับตำแหน่งได้อิสระ (Drag & Drop):** คลิกค้างที่แถบชื่อหัวกล้อง (มีสัญลักษณ์ `⠿`) แล้วลากไปปล่อยทับกล้องตัวอื่นเพื่อสลับตำแหน่งกันได้ทันที โดยวิดีโอไม่ดับและไม่กระตุก
 * 🔲 **เลย์เอาต์หน้าจอสมดุล (Balanced Multi-View):**
@@ -22,11 +27,30 @@ A high-performance, ultra-low latency, zero-CPU local web viewer for multiple CC
 
 ## 🚀 วิธีเริ่มต้นใช้งาน (Quick Start)
 
-### สำหรับ Windows:
+### วิธีที่ 1: รันผ่านไฟล์ `.exe` หรือ Desktop Shortcut (แนะนำ)
+ดับเบิ้ลคลิกที่ชอร์ตคัตบนเดสก์ท็อป:
+> **`CCTV Local Web`** (หรือไฟล์ `CCTV-Local-Web.exe`)
+
+* โปรแกรมจะเปิดหน้าต่างเบราว์เซอร์ขึ้นมาที่ `http://127.0.0.1:5000` โดยอัตโนมัติ
+* ไอคอนจะปรากฏที่ System Tray (มุมขวาล่างใกล้เวลานาฬิกา)
+* สามารถเปิด-ปิดแท็บเบราว์เซอร์ได้ตลอดเวลา และดับเบิ้ลคลิกไอคอนที่ Tray เพื่อเปิดดูกล้องได้ทันทีโดยไม่ต้องรันใหม่
+
+### วิธีที่ 2: รันผ่าน Script Batch
 ดับเบิ้ลคลิกไฟล์:
 > **`start_cctv_web.bat`**
 
-ระบบจะเริ่มทำงานและเปิดหน้าเว็บขึ้นมาที่ `http://localhost:5000` โดยอัตโนมัติ
+---
+
+## 🛠️ การคอมไพล์เป็น `.exe` ด้วยตนเอง (Build Standalone EXE)
+
+หากคุณแก้ไขโค้ดและต้องการสร้างไฟล์ `.exe` ใหม่ สามารถรันคำสั่ง:
+
+```bash
+pip install pyinstaller pystray pillow backports.tarfile
+pyinstaller --noconsole --onefile --clean --name "CCTV-Local-Web" --icon "cctv_icon.ico" --add-data "web;web" --add-data "bin/go2rtc.exe;bin" --add-data "cctv_icon.ico;." --add-data "cctv_icon.png;." --add-data "cameras.json;." --hidden-import "pystray._win32" --collect-all "backports" main.py
+```
+
+ไฟล์ `.exe` พร้อมใช้งานจะถูกสร้างไว้ในโฟลเดอร์ `dist/CCTV-Local-Web.exe`
 
 ---
 
@@ -34,7 +58,7 @@ A high-performance, ultra-low latency, zero-CPU local web viewer for multiple CC
 
 คุณสามารถตั้งค่าได้ 2 วิธี:
 1. **ผ่านหน้าเว็บโดยตรง (แนะนำ):** กดปุ่ม **"⚙️ จัดการกล้อง & เพิ่มจอ"** ที่มุมขวาบนของหน้าเว็บ กรอกชื่อกล้องและ RTSP URL แล้วกดบันทึก
-2. **ผ่านไฟล์ `cameras.json`:** แก้ไขไฟล์ `cameras.json` ในโฟลเดอร์โครงการ
+2. **ผ่านไฟล์ `cameras.json` หรือ `cameras.local.json`:** ใส่ URL กล้องลงในไฟล์การตั้งค่า
 
 ### ตัวอย่างรูปแบบ RTSP URL ตามยี่ห้อกล้องยอดนิยม:
 
@@ -60,14 +84,17 @@ cctv-local-web/
 │   └── templates/
 │       └── index.html       # Web dashboard
 ├── cameras.json             # Camera configurations template
-├── start_cctv_web.bat       # 1-Click launcher script for Windows
-├── web_server.py            # Local Flask web server
-├── webrtc_manager.py        # Stream synchronization manager
+├── cctv_icon.ico            # Windows application icon
+├── cctv_icon.png            # System Tray icon image
+├── main.py                  # Standalone Tray application entrypoint
+├── start_cctv_web.bat       # 1-Click batch launcher script for Windows
+├── web_server.py            # Local Flask web server & REST API
+├── webrtc_manager.py        # WebRTC stream engine manager
+├── CCTV-Local-Web.exe       # Built standalone executable
 └── README.md                # Project documentation
 ```
 
 ---
 
 ## 📄 ใบอนุญาต (License)
-
-โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต [MIT License](LICENSE) สามารถนำไปใช้งาน ปรับแต่ง หรือต่อยอดได้อย่างอิสระ
+MIT License - สามารถนำไปใช้งาน พัฒนาต่อ หรือแจกจ่ายได้อย่างอิสระ

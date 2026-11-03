@@ -1,14 +1,24 @@
 import sys
-if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
-if sys.stdin.encoding and sys.stdin.encoding.lower() != 'utf-8':
-    try:
-        sys.stdin.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
+import os
+
+# Console safety for Windows
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+else:
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+else:
+    if sys.stdin and sys.stdin.encoding and sys.stdin.encoding.lower() != 'utf-8':
+        try:
+            sys.stdin.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
 
 import time
 import json
@@ -17,14 +27,12 @@ import threading
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify
 
-from webrtc_manager import go2rtc_mgr, get_config_file
-
-BASE_DIR = Path(__file__).resolve().parent
+from webrtc_manager import go2rtc_mgr, get_config_file, BUNDLE_DIR, APP_DIR
 
 app = Flask(
     __name__,
-    template_folder=str(BASE_DIR / "web" / "templates"),
-    static_folder=str(BASE_DIR / "web" / "static")
+    template_folder=str(BUNDLE_DIR / "web" / "templates"),
+    static_folder=str(BUNDLE_DIR / "web" / "static")
 )
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
@@ -32,7 +40,7 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 HOST = "127.0.0.1"
 PORT = 5000
 
-# Start hardware-accelerated go2rtc engine
+# Ensure go2rtc starts
 go2rtc_mgr.start()
 
 

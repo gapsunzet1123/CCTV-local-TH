@@ -1,40 +1,97 @@
 import sys
-if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
-if sys.stdin.encoding and sys.stdin.encoding.lower() != 'utf-8':
-    try:
-        sys.stdin.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
-
 import os
+
+# Ensure safe console handling on Windows (handles None when run without console)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+else:
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+else:
+    if sys.stdin and sys.stdin.encoding and sys.stdin.encoding.lower() != 'utf-8':
+        try:
+            sys.stdin.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+
 import json
 import time
 import subprocess
 import atexit
+import shutil
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-LOCAL_CONFIG = BASE_DIR / "cameras.local.json"
-DEFAULT_CONFIG = BASE_DIR / "cameras.json"
-YAML_FILE = BASE_DIR / "go2rtc.yaml"
-GO2RTC_EXE = BASE_DIR / "bin" / "go2rtc.exe"
+# Path resolutions (support PyInstaller bundled mode and normal script mode)
+if getattr(sys, "frozen", False):
+    BUNDLE_DIR = Path(sys._MEIPASS).resolve()
+    APP_DIR = Path(sys.executable).resolve().parent
+else:
+    BUNDLE_DIR = Path(__file__).resolve().parent
+    APP_DIR = Path(__file__).resolve().parent
 
 def get_config_file():
-    return LOCAL_CONFIG if LOCAL_CONFIG.exists() else DEFAULT_CONFIG
+    """Finds or creates cameras config file in persistent APP_DIR"""
+    # 1. Local private credentials
+    local_cfg = APP_DIR / "cameras.local.json"
+    if local_cfg.exists():
+        return local_cfg
+    if (APP_DIR.parent / "cameras.local.json").exists():
+        return APP_DIR.parent / "cameras.local.json"
+
+    # 2. General config
+    default_cfg = APP_DIR / "cameras.json"
+    if default_cfg.exists():
+        return default_cfg
+    if (APP_DIR.parent / "cameras.json").exists():
+        return APP_DIR.parent / "cameras.json"
+
+    # 3. Copy bundled template if neither exists
+    bundled_cfg = BUNDLE_DIR / "cameras.json"
+    if bundled_cfg.exists():
+        try:
+            shutil.copyfile(bundled_cfg, default_cfg)
+            return default_cfg
+        except Exception:
+            return bundled_cfg
+
+    return default_cfg
+
+def get_go2rtc_exe():
+    """Finds go2rtc executable in bundled assets or beside executable"""
+    # Check bundled bin folder
+    b1 = BUNDLE_DIR / "bin" / "go2rtc.exe"
+    if b1.exists():
+        return b1
+    # Check APP_DIR bin folder
+    b2 = APP_DIR / "bin" / "go2rtc.exe"
+    if b2.exists():
+        return b2
+    # Check parent bin folder (e.g. running from dist/)
+    b3 = APP_DIR.parent / "bin" / "go2rtc.exe"
+    if b3.exists():
+        return b3
+    # Check directly beside exe
+    b4 = APP_DIR / "go2rtc.exe"
+    if b4.exists():
+        return b4
+    return b1
+
+YAML_FILE = APP_DIR / "go2rtc.yaml"
 
 class Go2RTCManager:
     def __init__(self):
         self.process = None
-        self.sync_config()
 
     def sync_config(self):
         """Reads camera config and generates go2rtc.yaml"""
         cfg_file = get_config_file()
-        if not cfg_file.exists():
+        if not cfg_file or not cfg_file.exists():
             return
 
         try:
@@ -67,13 +124,24 @@ class Go2RTCManager:
         if self.process and self.process.poll() is None:
             return
 
-        if not GO2RTC_EXE.exists():
-            print("[Error] go2rtc.exe not found in bin directory.")
+        exe_path = get_go2rtc_exe()
+        if not exe_path.exists():
+            print(f"[Error] go2rtc.exe not found at: {exe_path}")
             return
 
         self.sync_config()
-        cmd = [str(GO2RTC_EXE), "-config", str(YAML_FILE)]
-        self.process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = [str(exe_path), "-config", str(YAML_FILE)]
+
+        creationflags = 0
+        if sys.platform == "win32":
+            creationflags = subprocess.CREATE_NO_WINDOW
+
+        self.process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=creationflags
+        )
         print("⚡ [WebRTC Engine] go2rtc started with Zero-CPU Hardware Acceleration.")
 
     def restart(self):
